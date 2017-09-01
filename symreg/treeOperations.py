@@ -1,9 +1,11 @@
 import random as rnd
-from tree import BinaryOperatorInternalNode
+import tree as tr
 import generator as gtr
 
-# Pure
+# No side effects
 def crossover(firstTree, secondTree):
+	""" It produces a new tree, that is the result of
+	a random crossover of firstTree and secondTree """
 	def substituteSubtree(tree, height, subtree):
 		if tree.height() == height:
 			return subtree
@@ -11,29 +13,32 @@ def crossover(firstTree, secondTree):
 		if tree.op1.height() >= height and tree.op2.height() >= height:
 			choice = rnd.randint(0, 1)
 			if choice == 0:
-				return BinaryOperatorInternalNode(tree.operator, substituteSubtree(tree.op1, height, subtree), tree.op2)
+				return tr.BinaryOperatorInternalNode(tree.operator, substituteSubtree(tree.op1, height, subtree), tree.op2)
 			else:
-				return BinaryOperatorInternalNode(tree.operator, tree.op1, substituteSubtree(tree.op2, height, subtree))
+				return tr.BinaryOperatorInternalNode(tree.operator, tree.op1, substituteSubtree(tree.op2, height, subtree))
+
 		elif tree.op1.height() >= height:
-			return BinaryOperatorInternalNode(tree.operator, substituteSubtree(tree.op1, height, subtree), tree.op2)
-		elif tree.op2.height() >= height:
-			return BinaryOperatorInternalNode(tree.operator, tree.op1, substituteSubtree(tree.op2, height, subtree))
-		print("Problem in substitute subtree")
-		return None
+			return tr.BinaryOperatorInternalNode(tree.operator, substituteSubtree(tree.op1, height, subtree), tree.op2)
+
+		else:
+			return tr.BinaryOperatorInternalNode(tree.operator, tree.op1, substituteSubtree(tree.op2, height, subtree))
 
 	split1 = rnd.randint(1, firstTree.height())
 	split2 = rnd.randint(1, secondTree.height())
 	subtree = getSubtreeAtHeight(secondTree, split2)
 	return substituteSubtree(firstTree.clone(), split1, subtree.clone())
 
-# Pure
+# No side effects
 def mutateNode(node, minValue, maxValue, variables, operators):
+	""" Mutate the node passed as argument. If it's a leaf, than it returns a new random leaf.
+	If it's a BynaryOperatorInternalNode, then it changes its operator and copies the children """
 	if node.height() == 1:
 		return gtr.getLeaf(minValue, maxValue, variables)
-	return BinaryOperatorInternalNode(gtr.getOperator(operators), node.op1.clone(), node.op2.clone())
+	return tr.BinaryOperatorInternalNode(gtr.getOperator(operators), node.op1.clone(), node.op2.clone())
 
-# Pure
+# No side effects
 def mutation(tree, minValue, maxValue, variables, operators):
+	""" Mutate the tree passed as argument """
 	choice = rnd.randint(1,tree.numOfNodes())
 	if choice == 1:
 		return mutateNode(tree, minValue, maxValue, variables, operators)
@@ -42,13 +47,15 @@ def mutation(tree, minValue, maxValue, variables, operators):
 		rightNodes = tree.op2.numOfNodes()
 		choice = rnd.randint(1, leftNodes + rightNodes)
 		if choice <= leftNodes:
-			return BinaryOperatorInternalNode(tree.operator, mutation(tree.op1, minValue, maxValue, variables, operators), tree.op2.clone())
+			return tr.BinaryOperatorInternalNode(tree.operator, mutation(tree.op1, minValue, maxValue, variables, operators), tree.op2.clone())
 		else:
-			return BinaryOperatorInternalNode(tree.operator, tree.op1.clone(), mutation(tree.op2, minValue, maxValue, variables, operators))
+			return tr.BinaryOperatorInternalNode(tree.operator, tree.op1.clone(), mutation(tree.op2, minValue, maxValue, variables, operators))
 
 
-# Pure
+# No side effects
 def getSubtreeAtHeight(tree, height):
+	""" Returns a random subtree taken from the specified tree at the specified height.
+	It creates a copy of such subtree """
 	if tree.height() == height:
 		return tree.clone()
 
@@ -60,14 +67,13 @@ def getSubtreeAtHeight(tree, height):
 			return getSubtreeAtHeight(tree.op2, height)
 	elif tree.op1.height() >= height:
 		return getSubtreeAtHeight(tree.op1, height)
-	elif tree.op2.height() >= height:
+	else:
 		return getSubtreeAtHeight(tree.op2, height)
-	print("Problem in get subtree: self.height = " + str(tree.height()) + " and height = " + str(height))
-	print("self.op1.height = " + str(tree.op1.height()) + " and self.op2.height = " + str(tree.op2.height()))
-	return None
 
-# Pure
+# No side effects
 def pruneTreeForMaxHeight(tree, maxHeight, minValue, maxValue, variables):
+	""" Returns a new tree that is like the specified tree
+	but pruned so that its height is maxHeight """
 	def pruneTreeAux(tree, maxHeight, counter, minValue, maxValue, variables):
 		if tree.height() == 1:
 			return tree.clone()
@@ -75,11 +81,12 @@ def pruneTreeForMaxHeight(tree, maxHeight, minValue, maxValue, variables):
 			return gtr.getLeaf(minValue, maxValue, variables)
 		pruned1 = pruneTreeAux(tree.op1, maxHeight, counter + 1, minValue, maxValue, variables)
 		pruned2 = pruneTreeAux(tree.op2, maxHeight, counter + 1, minValue, maxValue, variables)
-		return BinaryOperatorInternalNode(tree.operator, pruned1, pruned2)
+		return tr.BinaryOperatorInternalNode(tree.operator, pruned1, pruned2)
 	return pruneTreeAux(tree, maxHeight, 1, minValue, maxValue, variables)
 
-# Pure
+# No side effects
 def pruneTree(tree, minValue, maxValue, variables):
+	""" Returns a copy of the specified tree with a random branch pruned """
 	choice = rnd.randint(0,tree.numOfInternalNodes())
 	if choice == 0:
 		return gtr.getLeaf(minValue, maxValue, variables)
@@ -88,6 +95,6 @@ def pruneTree(tree, minValue, maxValue, variables):
 		rightInternalNodes = tree.op2.numOfInternalNodes()
 		choice = rnd.randint(0, leftInternalNodes + rightInternalNodes)
 		if choice <= leftInternalNodes:
-			return BinaryOperatorInternalNode(tree.operator, pruneTree(tree.op1, minValue, maxValue, variables), tree.op2.clone())
+			return tr.BinaryOperatorInternalNode(tree.operator, pruneTree(tree.op1, minValue, maxValue, variables), tree.op2.clone())
 		else:
-			return BinaryOperatorInternalNode(tree.operator, tree.op1.clone(), pruneTree(tree.op2, minValue, maxValue, variables))
+			return tr.BinaryOperatorInternalNode(tree.operator, tree.op1.clone(), pruneTree(tree.op2, minValue, maxValue, variables))
