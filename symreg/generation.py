@@ -45,16 +45,20 @@ class Generation(object):
 		The first member is selected with probability pickProb. If it's not chosen, the 
 		second member is selected with probability pickProb, and so on. """
 		selectedMembers = []
+		membersWithErrorsModifiable = list(self.membersWithErrors)
 		while len(selectedMembers) < numMembers:
 			indexSelected = 0
-			while rnd.randint(0, 100) > int(pickProb * 100) and indexSelected != len(self.membersWithErrors) - 1:
+			while rnd.randint(0, 100) > int(pickProb * 100) and indexSelected != len(membersWithErrorsModifiable) - 1:
 				indexSelected += 1
-			memberWithErrorSelected = self.membersWithErrors[indexSelected]
+			memberWithErrorSelected = membersWithErrorsModifiable[indexSelected]
 			if memberWithErrorSelected[0] not in selectedMembers:
 				selectedMembers.append(memberWithErrorSelected[0])
+				membersWithErrorsModifiable.remove(memberWithErrorSelected)
 		return selectedMembers
 
-	def next(self, crossoverPerc, mutationPerc, randomPerc, copyPerc, shouldPruneForMaxHeight, minHeight, maxHeight, minValue, maxValue, variables, operators):
+	def next(self, minHeight, maxHeight, minValue, maxValue, variables , operators,
+		crossoverPerc = 0.7, mutationPerc = 0.2, randomPerc = 0.05, copyPerc = 0.05,
+		shouldPruneForMaxHeight = False, parentSelectionProb = 0.3):
 		""" It proceeds to the next generation with the help of genetic operations """
 		oldMembersWithError = self.membersWithErrors
 		newMembersWithError = []
@@ -67,15 +71,17 @@ class Generation(object):
 
 		# Crossover
 		for i in range(0, numCrossover):
-			members = self.getMembersForReproduction(2, 0.3)
+			members = self.getMembersForReproduction(2, parentSelectionProb)
 			m1 = members[0]
 			m2 = members[1]
 			newMember = trop.crossover(m1, m2)
+			if shouldPruneForMaxHeight:
+				newMember = trop.pruneTreeForMaxHeight(newMember, maxHeight, minValue, maxValue, variables)
 			newMembersWithError.append([newMember, 0])
 
 		# Mutation
 		for i in range(0, numMutation):
-			m1 = self.getMembersForReproduction(1, 0.3)[0]
+			m1 = self.getMembersForReproduction(1, parentSelectionProb)[0]
 			newMembersWithError.append([trop.mutation(m1, minValue, maxValue, variables, operators), 0])
 
 		# Random
@@ -83,7 +89,7 @@ class Generation(object):
 			newMembersWithError.append([gtr.getTree(minHeight, maxHeight, minValue, maxValue, variables, operators), 0])
 
 		# Copy
-		members = self.getMembersForReproduction(numCopy, 0.3)
+		members = self.getMembersForReproduction(numCopy, parentSelectionProb)
 		for m in members:
 			newMembersWithError.append([m.clone(), 0])
 

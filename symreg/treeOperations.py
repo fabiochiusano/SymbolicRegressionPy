@@ -39,14 +39,13 @@ def mutateNode(node, minValue, maxValue, variables, operators):
 # No side effects
 def mutation(tree, minValue, maxValue, variables, operators):
 	""" Mutate the tree passed as argument """
-	choice = rnd.randint(1,tree.numOfNodes())
+	choice = rnd.randint(1, tree.numOfNodes())
 	if choice == 1:
 		return mutateNode(tree, minValue, maxValue, variables, operators)
 	else:
 		leftNodes = tree.op1.numOfNodes()
 		rightNodes = tree.op2.numOfNodes()
-		choice = rnd.randint(1, leftNodes + rightNodes)
-		if choice <= leftNodes:
+		if choice <= 1 + leftNodes:
 			return tr.BinaryOperatorInternalNode(tree.operator, mutation(tree.op1, minValue, maxValue, variables, operators), tree.op2.clone())
 		else:
 			return tr.BinaryOperatorInternalNode(tree.operator, tree.op1.clone(), mutation(tree.op2, minValue, maxValue, variables, operators))

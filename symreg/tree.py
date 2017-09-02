@@ -3,13 +3,13 @@ import generator as gtr
 
 class Tree(object):
 	def __init__(self):
-		""" Do nothing """
+		pass
 
 
 
 class Leaf(Tree):
 	def __init__(self):
-		""" Do nothing """
+		pass
 
 	def height(self):
 		""" The height of a leaf is always 1 """
@@ -63,7 +63,7 @@ class VariableLeaf(Leaf):
 
 class InternalNode(Tree):
 	def __init__(self):
-		""" Do nothing """
+		pass
 
 class BinaryOperatorInternalNode(InternalNode):
 	def __init__(self, operator, op1, op2):
